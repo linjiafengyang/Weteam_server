@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-import uuid
 
-db = SQLAlchemy();
+db = SQLAlchemy()
 
 
 class User(db.Model):
@@ -11,22 +10,23 @@ class User(db.Model):
     student_id = db.Column(db.String(20), unique=True, nullable=False)
     is_teacher = db.Column(db.Boolean, nullable=False)
     # 存 dict 形如 id1 : 0, id2 :0
-    attended_course_id = db.Column(db.PickleType, nullable=True)
+    attended_course_ids = db.Column(db.PickleType, nullable=True)
     username = db.Column(db.String(20), nullable=False)
 
-    def __init__(self, student_id, name, is_teacher):
+    def __init__(self, student_id, name, is_teacher, attended_course_ids=None):
         self.student_id = student_id
         self.username = name
         self.is_teacher = is_teacher
+        self.attended_course_ids = attended_course_ids
 
     def add_user(self):
         """如果成功，那么就返回success，如果失败，返回失败原因"""
         if User.query.filter(self.student_id == User.student_id).first() is None:
             db.session.add(self)
             db.session.commit()
-            return 'success'
+            return '200 : Success'
         else:
-            return 'already have this student_id'
+            return '400 : Already have this student_id'
 
     def delete_user(self):
         pass
@@ -37,7 +37,7 @@ class User(db.Model):
             'student_id': self.student_id,
             'username': self.username,
             'is_teacher': self.is_teacher,
-            'attended_course_id': self.attended_course_id
+            'attended_course_ids': self.attended_course_ids
         }
         return info
 
@@ -46,24 +46,30 @@ class Team(db.Model):
     """队伍表"""
     __tablename__ = 'teams'
     team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    leader_id = db.Column(db.String(20), unique=True, nullable=False)
+    course_id = db.Column(db.Integer)
+    # 学号
+    leader_sid = db.Column(db.String(20), unique=True, nullable=False)
     team_info = db.Column(db.String(100), nullable=True)
     # list
     team_members_id = db.Column(db.PickleType, nullable=True)
     max_team = db.Column(db.Integer, nullable=False)
     available_team = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, leader_id, team_info, max_team):
-        self.leader_id = leader_id
+    def __init__(self, course_id, leader_sid, team_info, max_team,
+                 available_team, team_members_id= None):
+        self.course_id = course_id
+        self.leader_sid = leader_sid
         self.team_info = team_info
         self.team_members_id = ''
         self.max_team = max_team
-        self.available_team = max_team
+        self.available_team = available_team
+        self.team_members_id = team_members_id
 
     def __json__(self):
         info = {
             'team_id': self.team_id,
-            'leader_id': self.leader_id,
+            'course_id': self.course_id,
+            'leader_sid': self.leader_sid,
             'team_info': self.team_info,
             'team_members_id': self.team_members_id,
             'max_team': self.max_team,
@@ -76,8 +82,10 @@ class Course(db.Model):
     """课程表"""
     __tablename__ = 'course'
     course_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    teacher_id = db.Column(db.Integer)
     # list
     team_ids = db.Column(db.PickleType, nullable=True)
+    student_ids = db.Column(db.PickleType, nullable=True)
     course_info = db.Column(db.String(200), nullable=True)
     name = db.Column(db.String(100), nullable=False)
     course_time = db.Column(db.String(100), nullable=False)
@@ -86,7 +94,9 @@ class Course(db.Model):
     max_team = db.Column(db.Integer, nullable=False)
     min_team = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, course_info, name, course_time, start_time, end_time, max_team, min_team):
+    def __init__(self, teacher_id,course_info, name, course_time, start_time,
+                 end_time, max_team, min_team, student_ids=None, team_ids=None):
+        self.teacher_id = teacher_id
         self.course_info = course_info
         self.name = name
         self.course_time = course_time
@@ -94,10 +104,13 @@ class Course(db.Model):
         self.end_time = end_time
         self.max_team = max_team
         self.min_team = min_team
+        self.team_ids = team_ids
+        self.student_ids = student_ids
 
     def __json__(self):
         info = {
             'course_id': self.course_id,
+            'teacher_id': self.teacher_id,
             'team_ids': self.team_ids,
             'course_info' : self.course_info,
             'name': self.name,
@@ -107,3 +120,4 @@ class Course(db.Model):
             'max_team': self.max_team,
             'min_team': self.min_team
         }
+        return info
