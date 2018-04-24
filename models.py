@@ -9,14 +9,16 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.String(20), unique=True, nullable=False)
     is_teacher = db.Column(db.Boolean, nullable=False)
-    # 存 dict 形如 id1 : 0, id2 :0
-    attended_course_ids = db.Column(db.PickleType, nullable=True)
+    # 存 dict 形如 id1@id2
+    attended_course_ids = db.Column(db.Text, nullable=False)
     username = db.Column(db.String(20), nullable=False)
+    profile_photo = db.Column(db.Text)
 
-    def __init__(self, student_id, name, is_teacher, attended_course_ids=None):
+    def __init__(self, student_id, name, is_teacher, profile_photo, attended_course_ids):
         self.student_id = student_id
         self.username = name
         self.is_teacher = is_teacher
+        self.profile_photo = profile_photo
         self.attended_course_ids = attended_course_ids
 
     def add_user(self):
@@ -37,7 +39,8 @@ class User(db.Model):
             'student_id': self.student_id,
             'username': self.username,
             'is_teacher': self.is_teacher,
-            'attended_course_ids': self.attended_course_ids
+            'profile_photo': str(self.profile_photo),
+            'attended_course_ids': str(self.attended_course_ids)
         }
         return info
 
@@ -49,14 +52,14 @@ class Team(db.Model):
     course_id = db.Column(db.Integer)
     # 学号
     leader_sid = db.Column(db.String(20), unique=True, nullable=False)
-    team_info = db.Column(db.String(100), nullable=True)
+    team_info = db.Column(db.String(100), nullable=False)
     # list
-    team_members_id = db.Column(db.PickleType, nullable=True)
+    team_members_id = db.Column(db.Text, nullable=False)
     max_team = db.Column(db.Integer, nullable=False)
     available_team = db.Column(db.Integer, nullable=False)
 
     def __init__(self, course_id, leader_sid, team_info, max_team,
-                 available_team, team_members_id= None):
+                 available_team, team_members_id):
         self.course_id = course_id
         self.leader_sid = leader_sid
         self.team_info = team_info
@@ -84,9 +87,9 @@ class Course(db.Model):
     course_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     teacher_id = db.Column(db.Integer)
     # list
-    team_ids = db.Column(db.PickleType, nullable=True)
-    student_ids = db.Column(db.PickleType, nullable=True)
-    course_info = db.Column(db.String(200), nullable=True)
+    team_ids = db.Column(db.Text, nullable=False)
+    student_ids = db.Column(db.Text, nullable=False)
+    course_info = db.Column(db.String(200), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     course_time = db.Column(db.String(100), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
@@ -95,7 +98,7 @@ class Course(db.Model):
     min_team = db.Column(db.Integer, nullable=False)
 
     def __init__(self, teacher_id,course_info, name, course_time, start_time,
-                 end_time, max_team, min_team, student_ids=None, team_ids=None):
+                 end_time, max_team, min_team, student_ids, team_ids):
         self.teacher_id = teacher_id
         self.course_info = course_info
         self.name = name

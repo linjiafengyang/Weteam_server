@@ -14,11 +14,11 @@ def add_user():
     """使用于Post方法，用于向数据库中增加用户"""
     student_id = request.values.get('student_id')
     username = request.values.get('username')
-    is_teacher = request.values.get('is_teacher')
+    is_teacher = bool(request.values.get('is_teacher'))
     attended_course_ids = request.values.get('attended_course_ids')
-    if attended_course_ids == 'None':
-        attended_course_ids = None
-    u = User(student_id, username, is_teacher, attended_course_ids)
+    profile_photo = request.values.get('profile_photo')
+
+    u = User(student_id, username, is_teacher, profile_photo, attended_course_ids)
     error = u.add_user()
     return error
 
@@ -47,7 +47,6 @@ def modify_attended_course():
     if u is None:
         return "400 : Cannot find such a student"
     else:
-        attended_course_ids = attended_course_ids.split('@')
         u.attended_course_ids = attended_course_ids
         db.session.add(u)
         db.session.commit()
@@ -59,12 +58,16 @@ def modify_attended_course():
 @app.route('/add_team', methods=['POST'])
 def add_team():
     """向数据库中增加队伍"""
-    course_id = request.values.get('course_id')
+    course_id = int(request.values.get('course_id'))
     leader_sid = request.values.get('leader_sid')
     team_info = request.values.get('team_info')
     max_team = request.values.get('max_team')
     available_team = request.values.get('available_team')
     team_members_id = request.values.get('team_members_id')
+    # 只有存在对应的course_id才能创建对应的队伍
+    if Course.query.filter(course_id == Course.course_id).first() is None:
+        return '400 : Don\'t have such a course'
+
     team = Team(course_id, leader_sid, team_info, max_team, available_team, team_members_id)
     if Team.query.filter((team.course_id == Team.course_id) &
                          (team.leader_sid == Team.leader_sid)).first() is None:
@@ -107,7 +110,6 @@ def modify_team():
     if team is None:
         return "400 : Cannot find such a team"
     else:
-        team_members_id = team_members_id.split('@')
         team.team_members_id = team_members_id
         db.session.add(team)
         db.session.commit()
@@ -171,7 +173,6 @@ def course_modify_team():
     if course is None:
         return '400 : Cannot find such a course'
     else:
-        team_ids = team_ids.split('@')
         course.team_ids = team_ids
         db.session.add(course)
         db.session.commit()
@@ -187,11 +188,6 @@ def course_modify_student():
     if course is None:
         return '400 : Cannot find such a course'
     else:
-        temp = student_ids.split('@')
-        student_ids = {}
-        for a in temp:
-            p = a.split(':')
-            student_ids[p[0]] = p[1]
         course.student_ids = student_ids
         db.session.add(course)
         db.session.commit()
