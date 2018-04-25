@@ -115,8 +115,8 @@ class Course(db.Model):
     course_info = db.Column(db.String(200), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     course_time = db.Column(db.String(100), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
-    end_time = db.Column(db.DateTime, nullable=False)
+    start_time = db.Column(db.String(100), nullable=False)
+    end_time = db.Column(db.String(100), nullable=False)
     max_team = db.Column(db.Integer, nullable=False)
     min_team = db.Column(db.Integer, nullable=False)
 
