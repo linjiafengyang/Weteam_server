@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 db = SQLAlchemy()
 
@@ -30,8 +31,9 @@ class User(db.Model):
         else:
             return '400 : Already have this student_id'
 
-    def delete_user(self):
-        pass
+    def get_course_ids(self):
+        """以list的形式返回team_members_id"""
+        return str(self.attended_course_ids).split('@')
 
     def __json__(self):
         info = {
@@ -51,19 +53,18 @@ class Team(db.Model):
     team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_id = db.Column(db.Integer)
     # 学号
-    leader_sid = db.Column(db.String(20), unique=True, nullable=False)
+    leader_id = db.Column(db.Integer, unique=True, nullable=False)
     team_info = db.Column(db.String(100), nullable=False)
     # list
     team_members_id = db.Column(db.Text, nullable=False)
     max_team = db.Column(db.Integer, nullable=False)
     available_team = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, course_id, leader_sid, team_info, max_team,
+    def __init__(self, course_id, leader_id, team_info, max_team,
                  available_team, team_members_id):
         self.course_id = course_id
-        self.leader_sid = leader_sid
+        self.leader_id = leader_id
         self.team_info = team_info
-        self.team_members_id = ''
         self.max_team = max_team
         self.available_team = available_team
         self.team_members_id = team_members_id
@@ -72,7 +73,7 @@ class Team(db.Model):
         info = {
             'team_id': self.team_id,
             'course_id': self.course_id,
-            'leader_sid': self.leader_sid,
+            'leader_id': self.leader_id,
             'team_info': self.team_info,
             'team_members_id': self.team_members_id,
             'max_team': self.max_team,
@@ -80,13 +81,35 @@ class Team(db.Model):
         }
         return info
 
+    def get_members_id(self):
+        """以list的形式返回team_members_id"""
+        return str(self.team_members_id).split('@')
+
+    def delete_team(self, course):
+        # 得到student_ids
+        student_ids_dict = json.load(course.student_ids)
+        team_member = self.get_members_id()
+        # 将组内每个成员的组队信息更改
+        for member in team_member:
+            student_ids_dict[member] = 0
+        # 将队长的组队信息也进行更改
+        student_ids_dict[str(self.leader_id)] = 0
+        # 将course的team_ids进行更改
+        team_ids = course.get_team_ids()
+        team_ids = team_ids.remove(str(self.team_id))
+        course.team_ids = '@'.join(team_ids)
+        course.student_ids = json.dumps(student_ids_dict)
+        # 更新数据库
+        db.session.delete(self)
+        db.session.add(course)
+        db.session.commit()
+
 
 class Course(db.Model):
     """课程表"""
     __tablename__ = 'course'
     course_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     teacher_id = db.Column(db.Integer)
-    # list
     team_ids = db.Column(db.Text, nullable=False)
     student_ids = db.Column(db.Text, nullable=False)
     course_info = db.Column(db.String(200), nullable=False)
@@ -124,3 +147,7 @@ class Course(db.Model):
             'min_team': self.min_team
         }
         return info
+
+    def get_team_ids(self):
+        """以list的形式返回team_ids"""
+        return str(self.team_ids).split('@')

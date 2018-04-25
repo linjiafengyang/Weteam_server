@@ -1,6 +1,7 @@
 # coding:utf-8
 from flask import Flask, request
 from models import *
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./Weteam.db'
@@ -17,7 +18,6 @@ def add_user():
     is_teacher = bool(request.values.get('is_teacher'))
     attended_course_ids = request.values.get('attended_course_ids')
     profile_photo = request.values.get('profile_photo')
-
     u = User(student_id, username, is_teacher, profile_photo, attended_course_ids)
     error = u.add_user()
     return error
@@ -91,14 +91,17 @@ def get_team():
 
 @app.route('/delete_team', methods=['DELETE'])
 def delete_team():
-    """删除队伍"""
+    """删除队伍,解散队伍的同时，必须同时更改Course中所有对应学生的student_id和team_id"""
     team_id = request.values.get('team_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
         return "400 : Cannot find such a team"
     else:
-        db.session.delete(team)
-        db.session.commit()
+        # 找到这个team所对应的course
+        course = Course.query.filter(team.course_id == Course.course_id).first()
+        if course is None:
+            return '400 : Cannot find a corresponding course'
+        team.delete_team(course)
         return "200 : success"
 
 
@@ -159,22 +162,20 @@ def delete_course():
     if course is None:
         return '400 : Cannot find this course'
     else:
+        #删除所有队伍
+        team_ids = course.get_team_ids()
+        for team_id in team_ids:
+            team = Team.query.filter(team_id == Team.team_id).first()
+            db.session.delete(team)
+        student_ids_dict = json.load(course.student_ids)
+        # 对于所有参加了这门课的学生，在其attended_course_ids中修改
+        for user_id in student_ids_dict:
+            user = User.query.filter(user_id == User.user_id).first()
+            attended_course_ids = user.get_course_ids()
+            attended_course_ids = attended_course_ids.remove(course_id)
+            user.attended_course_ids = ''.join(attended_course_ids)
+            db.session.add(user)
         db.session.delete(course)
-        db.session.commit()
-        return '200 : success'
-
-
-@app.route('/course_modify_team', methods=['POST'])
-def course_modify_team():
-    """增删队伍"""
-    course_id = request.values.get('course_id')
-    team_ids = request.values.get('team_ids')
-    course = Course.query.filter(course_id == Course.course_id).first()
-    if course is None:
-        return '400 : Cannot find such a course'
-    else:
-        course.team_ids = team_ids
-        db.session.add(course)
         db.session.commit()
         return '200 : success'
 
