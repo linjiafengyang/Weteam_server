@@ -15,7 +15,13 @@ def add_user():
     """使用于Post方法，用于向数据库中增加用户"""
     student_id = request.values.get('student_id')
     username = request.values.get('username')
-    is_teacher = bool(request.values.get('is_teacher'))
+    if request.values.get('is_teacher') == '0':
+        is_teacher = 0;
+    elif request.values.get('is_teacher') == '1':
+        is_teacher = 1;
+    else:
+        error = "400 : is_teacher is neither 0 or 1";
+        return error
     attended_course_ids = request.values.get('attended_course_ids')
     profile_photo = request.values.get('profile_photo')
     u = User(student_id, username, is_teacher, profile_photo, attended_course_ids)
@@ -148,7 +154,15 @@ def add_course():
 @app.route('/get_course', methods=['GET'])
 def get_course():
     course_id = request.values.get('course_id')
-    course = Course.query.filter(course_id == Course.course_id).first()
+    if course_id is None:
+        name = request.values.get('name')
+        course_time = request.values.get('course_time')
+        if name is None or course_time is None:
+            return '400 : Don\'t  have enough information'
+        else:
+            course = Course.query.filter((name == Course.name) & (course_time == Course.course_time)).first()
+    else:
+        course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
         return '400 : Cannot find this course'
     else:
