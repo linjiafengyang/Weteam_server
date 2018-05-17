@@ -183,7 +183,7 @@ def get_course():
         return '%s' % json.dumps(course.__json__()), 200
 
 
-@app.route('/delete_course', methods=['POST'])
+@app.route('/delete_course', methods=['DELETE'])
 def delete_course():
     course_id = request.values.get('course_id')
     course = Course.query.filter(course_id == Course.course_id).first()
@@ -191,18 +191,22 @@ def delete_course():
         return 'Cannot find this course', 400
     else:
         #删除所有队伍
-        team_ids = course.get_team_ids()
-        for team_id in team_ids:
-            team = Team.query.filter(team_id == Team.team_id).first()
-            db.session.delete(team)
-        student_ids_dict = json.load(course.student_ids)
+        if course.team_ids != 'None':
+            team_ids = course.get_team_ids()
+            for team_id in team_ids:
+                team = Team.query.filter(team_id == Team.team_id).first()
+                db.session.delete(team)
+
         # 对于所有参加了这门课的学生，在其attended_course_ids中修改
-        for user_id in student_ids_dict:
-            user = User.query.filter(user_id == User.user_id).first()
-            attended_course_ids = user.get_course_ids()
-            attended_course_ids = attended_course_ids.remove(course_id)
-            user.attended_course_ids = ''.join(attended_course_ids)
-            db.session.add(user)
+        if course.student_ids != 'None':
+            student_ids_dict = json.load(course.student_ids)
+            for user_id in student_ids_dict:
+                user = User.query.filter(user_id == User.user_id).first()
+                attended_course_ids = user.get_course_ids()
+                attended_course_ids = attended_course_ids.remove(course_id)
+                user.attended_course_ids = ''.join(attended_course_ids)
+                db.session.add(user)
+
         db.session.delete(course)
         db.session.commit()
         return 'success', 200
