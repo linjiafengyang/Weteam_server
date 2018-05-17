@@ -151,6 +151,20 @@ def add_course():
         return 'Already have this class', 400
 
 
+@app.route('/modify_course_info', methods=['POST'])
+def modify_course_info():
+    course_id = request.values.get('course_id')
+    course_info = request.values.get('course_info')
+    course = Course.query.filter(course_id == Course.course_id).first()
+    if course is None:
+        return 'Don\'t have such a course', 400
+    else:
+        course.course_info = course_info
+        db.session.add(course)
+        db.session.commit()
+        return '%s' % json.dumps(course.__json__()), 200
+
+
 @app.route('/get_course', methods=['GET'])
 def get_course():
     course_id = request.values.get('course_id')
