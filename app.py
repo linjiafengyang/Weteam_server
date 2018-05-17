@@ -36,7 +36,7 @@ def get_user():
     if u is None:
         return "Cannot find such a student", 400
     else:
-        return "%s" % u.__json__(), 200
+        return "%s" % json.dumps(u.__json__()), 200
 
 
 @app.route('/delete_user', methods=['DELETE'])
@@ -92,7 +92,7 @@ def get_team():
     if team is None:
         return "Cannot find such a team", 400
     else:
-        return "%s" % team.__json__(), 200
+        return "%s" % json.dumps(team.__json__()), 200
 
 
 @app.route('/delete_team', methods=['DELETE'])
@@ -166,7 +166,7 @@ def get_course():
     if course is None:
         return 'Cannot find this course', 400
     else:
-        return '%s' % course.__json__(), 200
+        return '%s' % json.dumps(course.__json__()), 200
 
 
 @app.route('/delete_course', methods=['POST'])
