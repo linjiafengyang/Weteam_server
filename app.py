@@ -20,7 +20,7 @@ def add_user():
     elif request.values.get('is_teacher') == '1':
         is_teacher = 1;
     else:
-        error = "400 : is_teacher is neither 0 or 1";
+        error = "is_teacher is neither 0 or 1", 400
         return error
     attended_course_ids = request.values.get('attended_course_ids')
     profile_photo = request.values.get('profile_photo')
@@ -34,9 +34,9 @@ def get_user():
     student_id = request.values.get('student_id')
     u = User.query.filter(User.student_id == student_id).first()
     if u is None:
-        return "400 : Cannot find such a student"
+        return "Cannot find such a student", 400
     else:
-        return "200 : %s" % u.__json__()
+        return "%s" % u.__json__(), 200
 
 
 @app.route('/delete_user', methods=['DELETE'])
@@ -51,12 +51,12 @@ def modify_attended_course():
     attended_course_ids = request.values.get('attended_course_ids')
     u = User.query.filter(User.student_id == student_id).first()
     if u is None:
-        return "400 : Cannot find such a student"
+        return "Cannot find such a student", 400
     else:
         u.attended_course_ids = attended_course_ids
         db.session.add(u)
         db.session.commit()
-        return "200 : success"
+        return "success", 200
 
 # Team部分
 
@@ -72,16 +72,16 @@ def add_team():
     team_members_id = request.values.get('team_members_id')
     # 只有存在对应的course_id才能创建对应的队伍
     if Course.query.filter(course_id == Course.course_id).first() is None:
-        return '400 : Don\'t have such a course'
+        return 'Don\'t have such a course'
 
     team = Team(course_id, leader_sid, team_info, max_team, available_team, team_members_id)
     if Team.query.filter((team.course_id == Team.course_id) &
                          (team.leader_sid == Team.leader_sid)).first() is None:
         db.session.add(team)
         db.session.commit()
-        return "200 : success"
+        return "success", 200
     else:
-        return "400 : Already have a team with this leader"
+        return "Already have a team with this leader", 400
 
 
 @app.route('/get_team', methods=['GET'])
@@ -90,9 +90,9 @@ def get_team():
     team_id = request.values.get('team_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
-        return "400 : Cannot find such a team"
+        return "Cannot find such a team", 400
     else:
-        return "200 : %s" % team.__json__()
+        return "%s" % team.__json__(), 200
 
 
 @app.route('/delete_team', methods=['DELETE'])
@@ -101,14 +101,14 @@ def delete_team():
     team_id = request.values.get('team_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
-        return "400 : Cannot find such a team"
+        return "Cannot find such a team", 400
     else:
         # 找到这个team所对应的course
         course = Course.query.filter(team.course_id == Course.course_id).first()
         if course is None:
-            return '400 : Cannot find a corresponding course'
+            return 'Cannot find a corresponding course', 400
         team.delete_team(course)
-        return "200 : success"
+        return "success", 200
 
 
 @app.route('/modify_team', methods=['POST'])
@@ -117,15 +117,15 @@ def modify_team():
     team_members_id = request.values.get('team_members_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
-        return "400 : Cannot find such a team"
+        return "Cannot find such a team", 400
     else:
         team.team_members_id = team_members_id
         db.session.add(team)
         db.session.commit()
-        return "200 : success"
+        return "success", 200
+
 
 # Course部分
-
 
 @app.route('/add_course', methods=['POST'])
 def add_course():
@@ -146,9 +146,9 @@ def add_course():
                            (course_time == Course.course_time)).first() is None:
         db.session.add(course)
         db.session.commit()
-        return '200 : success'
+        return 'success', 200
     else:
-        return '400 : Already have this class'
+        return 'Already have this class', 400
 
 
 @app.route('/get_course', methods=['GET'])
@@ -158,15 +158,15 @@ def get_course():
         name = request.values.get('name')
         course_time = request.values.get('course_time')
         if name is None or course_time is None:
-            return '400 : Don\'t  have enough information'
+            return 'Don\'t  have enough information', 400
         else:
             course = Course.query.filter((name == Course.name) & (course_time == Course.course_time)).first()
     else:
         course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
-        return '400 : Cannot find this course'
+        return 'Cannot find this course', 400
     else:
-        return '200 : %s' % course.__json__();
+        return '%s' % course.__json__(), 200
 
 
 @app.route('/delete_course', methods=['POST'])
@@ -174,7 +174,7 @@ def delete_course():
     course_id = request.values.get('course_id')
     course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
-        return '400 : Cannot find this course'
+        return 'Cannot find this course', 400
     else:
         #删除所有队伍
         team_ids = course.get_team_ids()
@@ -191,7 +191,7 @@ def delete_course():
             db.session.add(user)
         db.session.delete(course)
         db.session.commit()
-        return '200 : success'
+        return 'success', 200
 
 
 @app.route('/course_modify_student', methods=['POST'])
@@ -201,12 +201,12 @@ def course_modify_student():
     student_ids = request.values.get('student_ids')
     course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
-        return '400 : Cannot find such a course'
+        return 'Cannot find such a course', 400
     else:
         course.student_ids = student_ids
         db.session.add(course)
         db.session.commit()
-        return '200 : success'
+        return 'success', 200
 
 
 if __name__ == '__main__':

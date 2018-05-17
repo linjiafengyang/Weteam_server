@@ -27,9 +27,9 @@ class User(db.Model):
         if User.query.filter(self.student_id == User.student_id).first() is None:
             db.session.add(self)
             db.session.commit()
-            return '200 : Success'
+            return 'Success', 200
         else:
-            return '400 : Already have this student_id'
+            return 'Already have this student_id', 400
 
     def get_course_ids(self):
         """以list的形式返回team_members_id"""
