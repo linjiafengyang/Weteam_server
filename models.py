@@ -37,12 +37,12 @@ class User(db.Model):
 
     def __json__(self):
         info = {
-            'user_id': self.user_id,
-            'student_id': self.student_id,
-            'username': self.username,
-            'is_teacher': self.is_teacher,
-            'profile_photo': str(self.profile_photo),
-            'attended_course_ids': str(self.attended_course_ids)
+            "user_id": self.user_id,
+            "student_id": self.student_id,
+            "username": self.username,
+            "is_teacher": self.is_teacher,
+            "profile_photo": str(self.profile_photo),
+            "attended_course_ids": str(self.attended_course_ids)
         }
         return info
 
@@ -71,13 +71,13 @@ class Team(db.Model):
 
     def __json__(self):
         info = {
-            'team_id': self.team_id,
-            'course_id': self.course_id,
-            'leader_id': self.leader_id,
-            'team_info': self.team_info,
-            'team_members_id': self.team_members_id,
-            'max_team': self.max_team,
-            'available_team': self.available_team
+            "team_id": self.team_id,
+            "course_id": self.course_id,
+            "leader_id": self.leader_id,
+            "team_info": self.team_info,
+            "team_members_id": self.team_members_id,
+            "max_team": self.max_team,
+            "available_team": self.available_team
         }
         return info
 
@@ -135,16 +135,16 @@ class Course(db.Model):
 
     def __json__(self):
         info = {
-            'course_id': self.course_id,
-            'teacher_id': self.teacher_id,
-            'team_ids': self.team_ids,
-            'course_info' : self.course_info,
-            'name': self.name,
-            'course_time': self.course_time,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
-            'max_team': self.max_team,
-            'min_team': self.min_team
+            "course_id": self.course_id,
+            "teacher_id": self.teacher_id,
+            "team_ids": self.team_ids,
+            "course_info": self.course_info,
+            "name": self.name,
+            "course_time": self.course_time,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "max_team": self.max_team,
+            "min_team": self.min_team
         }
         return info
 
