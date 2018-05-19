@@ -16,9 +16,9 @@ def add_user():
     student_id = request.values.get('student_id')
     username = request.values.get('username')
     if request.values.get('is_teacher') == '0':
-        is_teacher = 0;
+        is_teacher = 0
     elif request.values.get('is_teacher') == '1':
-        is_teacher = 1;
+        is_teacher = 1
     else:
         error = "is_teacher is neither 0 or 1", 400
         return error
