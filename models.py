@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*
 from flask_sqlalchemy import SQLAlchemy
 import json
+import base64
+from Crypto.Cipher import AES
+import os
+import requests
+import binascii
 
 db = SQLAlchemy()
 
@@ -152,3 +157,68 @@ class Course(db.Model):
     def get_team_ids(self):
         """以list的形式返回team_ids"""
         return str(self.team_ids).split('@')
+
+
+class ThirdSessionKey(db.Model):
+    """third session key"""
+    __tablename__ = 'thirdsessionkeys'
+    third_session_key_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    third_session_key = db.Column(db.String(50), unique=True, nullable=False)
+    session_key = db.Column(db.String(50), unique=True, nullable=False)
+    openid = db.Column(db.String(50), unique=True, nullable=False)
+
+    def __init__(self, third_session_key=None, session_key=None, openid=None):
+        self.appid = 'wx3b06cde5635b391d'
+        self.secret = '559c9a13441e8e2a8e970860a37170f8'
+        #self.appid = 'wx4f4bc4dec97d474b'
+        #self.session_key = 'tiihtNczf5v6AKRyjwEUhQ=='
+        self.third_session_key = third_session_key
+        self.session_key = session_key
+        self.openid = openid
+
+    # decrypt encrypted_data and add third_session_key to it
+    def get_decrypted_data(self, js_code, encrypted_data, iv):
+        self.jscode2session(js_code)
+        # base64 decode
+        session_key = base64.b64decode(self.session_key)
+        encrypted_data = base64.b64decode(encrypted_data)
+        iv = base64.b64decode(iv)
+
+        cipher = AES.new(session_key, AES.MODE_CBC, iv)
+
+        decrypt_data = self._unpad(cipher.decrypt(encrypted_data))
+        decrypted = json.loads(decrypt_data.decode())
+
+        if decrypted['watermark']['appid'] != self.appid:
+            raise Exception('Invalid Buffer')
+
+        # 生成长度为32位的hex字符串，用于第三方session的key
+        self.third_session_key = binascii.hexlify(os.urandom(16)).decode()
+        # add to the decrypted(it is a python dictionary)
+        decrypted['third_session_key'] = self.third_session_key
+
+        # store third_session_key, session_key, openid
+        thirdsessionkey = ThirdSessionKey(self.third_session_key, self.session_key, self.openid)
+        temp = ThirdSessionKey.query.filter((thirdsessionkey.session_key == ThirdSessionKey.session_key) & 
+                                        (thirdsessionkey.openid == ThirdSessionKey.openid)).first()
+        if temp is None:
+            db.session.add(thirdsessionkey)
+            db.session.commit()
+        else:
+            temp.third_session_key = thirdsessionkey.third_session_key
+            db.session.commit()
+
+        return decrypted
+        
+
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
+    
+    # get json(dict): {openid, session_key}
+    def jscode2session(self, js_code):
+        url = ('https://api.weixin.qq.com/sns/jscode2session?'
+               'appid={}&secret={}&js_code={}&grant_type=authorization_code'
+               ).format(self.appid, self.secret, js_code)
+        r = requests.get(url)
+        self.session_key = r.json().get('session_key')
+        self.openid = r.json().get('openid')
