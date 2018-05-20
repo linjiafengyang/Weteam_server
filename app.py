@@ -16,9 +16,9 @@ def add_user():
     student_id = request.values.get('student_id')
     username = request.values.get('username')
     if request.values.get('is_teacher') == '0':
-        is_teacher = 0;
+        is_teacher = 0
     elif request.values.get('is_teacher') == '1':
-        is_teacher = 1;
+        is_teacher = 1
     else:
         error = "is_teacher is neither 0 or 1", 400
         return error
@@ -230,6 +230,17 @@ def course_modify_student():
         db.session.add(course)
         db.session.commit()
         return 'success', 200
+
+# third session key
+@app.route('/get_third_session_key', methods=['POST', 'GET'])
+def get_third_session_key():
+    code = request.values.get('code')
+    encryptedData = request.values.get('encryptedData')
+    iv = request.values.get('iv')
+    # encryptedData = 'CiyLU1Aw2KjvrjMdj8YKliAjtP4gsMZMQmRzooG2xrDcvSnxIMXFufNstNGTyaGS9uT5geRa0W4oTOb1WT7fJlAC+oNPdbB+3hVbJSRgv+4lGOETKUQz6OYStslQ142dNCuabNPGBzlooOmB231qMM85d2/fV6ChevvXvQP8Hkue1poOFtnEtpyxVLW1zAo6/1Xx1COxFvrc2d7UL/lmHInNlxuacJXwu0fjpXfz/YqYzBIBzD6WUfTIF9GRHpOn/Hz7saL8xz+W//FRAUid1OksQaQx4CMs8LOddcQhULW4ucetDf96JcR3g0gfRK4PC7E/r7Z6xNrXd2UIeorGj5Ef7b1pJAYB6Y5anaHqZ9J6nKEBvB4DnNLIVWSgARns/8wR2SiRS7MNACwTyrGvt9ts8p12PKFdlqYTopNHR1Vf7XjfhQlVsAJdNiKdYmYVoKlaRv85IfVunYzO0IKXsyl7JCUjCpoG20f0a04COwfneQAGGwd5oa+T8yO5hzuyDb/XcxxmK01EpqOyuxINew=='
+    # iv = 'r7BXXKkLb8qrSNn05n0qiA=='
+    return json.dumps(ThirdSessionKey().get_decrypted_data(js_code=code, encrypted_data=encryptedData, 
+                    iv=iv)), 200
 
 
 if __name__ == '__main__':
