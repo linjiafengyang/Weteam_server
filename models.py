@@ -219,6 +219,7 @@ class ThirdSessionKey(db.Model):
             db.session.commit()
 
         return decrypted
+        
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
