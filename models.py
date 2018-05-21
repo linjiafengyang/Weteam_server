@@ -178,7 +178,17 @@ class ThirdSessionKey(db.Model):
 
     # decrypt encrypted_data and add third_session_key to it
     def get_decrypted_data(self, js_code, encrypted_data, iv):
-        self.jscode2session(js_code)
+        session_key_and_openid = self.jscode2session(js_code)
+        self.session_key = session_key_and_openid.get('session_key')
+        self.openid = session_key_and_openid.get('openid')
+        
+        if self.session_key is None:
+            return 'Error: session_key is None'
+        elif encrypted_data is None:
+            return 'Error: encrypted_data is None'
+        elif iv is None:
+            return 'Error: iv is None'
+        
         # base64 decode
         session_key = base64.b64decode(self.session_key)
         encrypted_data = base64.b64decode(encrypted_data)
@@ -219,5 +229,4 @@ class ThirdSessionKey(db.Model):
                'appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
         r = requests.get(url)
-        self.session_key = r.json().get('session_key')
-        self.openid = r.json().get('openid')
+        return r.json()
