@@ -231,6 +231,7 @@ def course_modify_student():
         db.session.commit()
         return 'success', 200
 
+
 # third session key
 @app.route('/get_third_session_key', methods=['POST', 'GET'])
 def get_third_session_key():
