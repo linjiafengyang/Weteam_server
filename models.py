@@ -177,7 +177,7 @@ class ThirdSessionKey(db.Model):
         self.openid = openid
 
     # decrypt encrypted_data and add third_session_key to it
-    def get_decrypted_data(self, js_code, encrypted_data, iv):
+    def get_third_session_key(self, js_code, encrypted_data, iv):
         session_key_and_openid = self.jscode2session(js_code)
         self.session_key = session_key_and_openid.get('session_key')
         self.openid = session_key_and_openid.get('openid')
@@ -222,6 +222,18 @@ class ThirdSessionKey(db.Model):
 
         return decrypted
         
+    def login(self, third_session_key):
+        temp = ThirdSessionKey.query.filter(third_session_key == ThirdSessionKey.third_session_key).first()
+        if temp is None:
+            return False
+        else:
+            return True
+            # session_key = temp.session_key
+            # if session_key is None:
+            #     return False
+            # else:
+            #     return True
+
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]

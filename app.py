@@ -243,12 +243,16 @@ def get_third_session_key():
     code = request.values.get('code')
     encryptedData = request.values.get('encryptedData')
     iv = request.values.get('iv')
-    decryptedData = ThirdSessionKey().get_decrypted_data(js_code=code, encrypted_data=encryptedData, iv=iv)
+    decryptedData = ThirdSessionKey().get_third_session_key(js_code=code, encrypted_data=encryptedData, iv=iv)
     if decryptedData:
         return json.dumps(decryptedData), 200
     else:
         return 'some error', 400
 
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    third_session_key = request.values.get('third_session_key')
+    return ThirdSessionKey().login(third_session_key=third_session_key)
 
 if __name__ == '__main__':
     db.app = app
