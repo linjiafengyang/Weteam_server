@@ -163,9 +163,9 @@ class ThirdSessionKey(db.Model):
     """third session key"""
     __tablename__ = 'thirdsessionkeys'
     third_session_key_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    third_session_key = db.Column(db.String(50), unique=True, nullable=False)
-    session_key = db.Column(db.String(50), unique=True, nullable=False)
-    openid = db.Column(db.String(50), unique=True, nullable=False)
+    third_session_key = db.Column(db.String(50), nullable=False)
+    session_key = db.Column(db.String(50), nullable=False)
+    openid = db.Column(db.String(50), nullable=False)
 
     def __init__(self, third_session_key=None, session_key=None, openid=None):
         self.appid = 'wx3b06cde5635b391d'
@@ -181,13 +181,15 @@ class ThirdSessionKey(db.Model):
         session_key_and_openid = self.jscode2session(js_code)
         self.session_key = session_key_and_openid.get('session_key')
         self.openid = session_key_and_openid.get('openid')
+        # print(self.session_key)
+        # print(self.openid)
         
         if self.session_key is None:
-            return 'Error: session_key is None'
+            return 'Error: session_key is None', 400
         elif encrypted_data is None:
-            return 'Error: encrypted_data is None'
+            return 'Error: encrypted_data is None', 400
         elif iv is None:
-            return 'Error: iv is None'
+            return 'Error: iv is None', 400
         
         # base64 decode
         session_key = base64.b64decode(self.session_key)
@@ -197,7 +199,7 @@ class ThirdSessionKey(db.Model):
         cipher = AES.new(session_key, AES.MODE_CBC, iv)
 
         decrypt_data = self._unpad(cipher.decrypt(encrypted_data))
-        decrypted = json.loads(decrypt_data.decode())
+        decrypted = json.loads(decrypt_data.decode('utf-8', 'ignore'))
 
         if decrypted['watermark']['appid'] != self.appid:
             raise Exception('Invalid Buffer')
@@ -209,13 +211,13 @@ class ThirdSessionKey(db.Model):
 
         # store third_session_key, session_key, openid
         thirdsessionkey = ThirdSessionKey(self.third_session_key, self.session_key, self.openid)
-        temp = ThirdSessionKey.query.filter((thirdsessionkey.session_key == ThirdSessionKey.session_key) & 
-                                        (thirdsessionkey.openid == ThirdSessionKey.openid)).first()
+        temp = ThirdSessionKey.query.filter(thirdsessionkey.openid == ThirdSessionKey.openid).first()
         if temp is None:
             db.session.add(thirdsessionkey)
             db.session.commit()
         else:
             temp.third_session_key = thirdsessionkey.third_session_key
+            temp.session_key = thirdsessionkey.session_key
             db.session.commit()
 
         return decrypted
@@ -226,8 +228,7 @@ class ThirdSessionKey(db.Model):
     
     # get json(dict): {openid, session_key}
     def jscode2session(self, js_code):
-        url = ('https://api.weixin.qq.com/sns/jscode2session?'
-               'appid={}&secret={}&js_code={}&grant_type=authorization_code'
+        url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
         r = requests.get(url)
         return r.json()
