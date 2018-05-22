@@ -245,7 +245,7 @@ def get_third_session_key():
     # iv = request.values.get('iv')
     third_session_key = ThirdSessionKey().get_third_session_key(js_code=code)
     if third_session_key:
-        return json.dumps(third_session_key), 200
+        return third_session_key, 200
     else:
         return 'some error', 400
 
