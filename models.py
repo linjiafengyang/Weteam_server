@@ -181,6 +181,8 @@ class ThirdSessionKey(db.Model):
         session_key_and_openid = self.jscode2session(js_code)
         self.session_key = session_key_and_openid.get('session_key')
         self.openid = session_key_and_openid.get('openid')
+        print(self.session_key)
+        print(self.openid)
         
         if self.session_key is None:
             return 'Error: session_key is None'
@@ -226,12 +228,7 @@ class ThirdSessionKey(db.Model):
     
     # get json(dict): {openid, session_key}
     def jscode2session(self, js_code):
-        print(self.appid)
-        print(self.secret)
         url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
-        print(url)
         r = requests.get(url)
-        print(r.json())
-        print(r.json().get('session_key'))
         return r.json()
