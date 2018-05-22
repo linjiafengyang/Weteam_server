@@ -187,7 +187,6 @@ class ThirdSessionKey(db.Model):
 
         # 生成长度为32位的hex字符串，用于第三方session的key
         self.third_session_key = binascii.hexlify(os.urandom(16)).decode()
-        third_session_key = json.loads(self.third_session_key.decode('utf-8', 'ignore'))
         # store third_session_key, session_key, openid
         thirdsessionkey = ThirdSessionKey(self.third_session_key, self.session_key, self.openid)
         temp = ThirdSessionKey.query.filter(thirdsessionkey.openid == ThirdSessionKey.openid).first()
@@ -199,7 +198,7 @@ class ThirdSessionKey(db.Model):
             temp.session_key = thirdsessionkey.session_key
             db.session.commit()
 
-        return third_session_key
+        return self.third_session_key
         
     def login(self, third_session_key):
         temp = ThirdSessionKey.query.filter(third_session_key == ThirdSessionKey.third_session_key).first()
