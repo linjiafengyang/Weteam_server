@@ -237,5 +237,4 @@ class ThirdSessionKey(db.Model):
         url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
         r = requests.get(url)
-        print(r.json())
         return r.json()
