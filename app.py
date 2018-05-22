@@ -114,15 +114,20 @@ def delete_team():
 @app.route('/modify_team', methods=['POST'])
 def modify_team():
     team_id = request.values.get('team_id')
+    leader_id = request.values.get('leader_id')
     team_members_id = request.values.get('team_members_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
         return "Cannot find such a team", 400
     else:
-        team.team_members_id = team_members_id
-        db.session.add(team)
-        db.session.commit()
-        return "success", 200
+        # if need to change team leader
+        if leader_id == 'None':
+            team.leader_id = leader_id
+        else:
+            team.team_members_id = team_members_id
+            db.session.add(team)
+            db.session.commit()
+            return "success", 200
 
 
 # Course部分
@@ -230,6 +235,7 @@ def course_modify_student():
         db.session.add(course)
         db.session.commit()
         return 'success', 200
+
 
 # third session key
 @app.route('/get_third_session_key', methods=['POST', 'GET'])
