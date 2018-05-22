@@ -226,8 +226,12 @@ class ThirdSessionKey(db.Model):
     
     # get json(dict): {openid, session_key}
     def jscode2session(self, js_code):
-        url = ('https://api.weixin.qq.com/sns/jscode2session?'
-               'appid={}&secret={}&js_code={}&grant_type=authorization_code'
+        print(self.appid)
+        print(self.secret)
+        url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
+        print(url)
         r = requests.get(url)
+        print(r.json())
+        print(r.json().get('session_key'))
         return r.json()
