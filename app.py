@@ -252,7 +252,7 @@ def get_third_session_key():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     third_session_key = request.values.get('third_session_key')
-    return ThirdSessionKey().login(third_session_key=third_session_key)
+    return json.dumps(ThirdSessionKey(third_session_key=third_session_key).login(third_session_key=third_session_key)), 200
 
 if __name__ == '__main__':
     db.app = app
