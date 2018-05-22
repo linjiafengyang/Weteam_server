@@ -199,7 +199,7 @@ class ThirdSessionKey(db.Model):
         cipher = AES.new(session_key, AES.MODE_CBC, iv)
 
         decrypt_data = self._unpad(cipher.decrypt(encrypted_data))
-        decrypted = json.loads(decrypt_data.decode())
+        decrypted = json.loads(decrypt_data)
 
         if decrypted['watermark']['appid'] != self.appid:
             raise Exception('Invalid Buffer')
