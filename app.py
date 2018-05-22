@@ -65,7 +65,7 @@ def modify_attended_course():
 def add_team():
     """向数据库中增加队伍"""
     course_id = int(request.values.get('course_id'))
-    leader_sid = request.values.get('leader_sid')
+    leader_id = request.values.get('leader_id')
     team_info = request.values.get('team_info')
     max_team = request.values.get('max_team')
     available_team = request.values.get('available_team')
@@ -74,9 +74,9 @@ def add_team():
     if Course.query.filter(course_id == Course.course_id).first() is None:
         return 'Don\'t have such a course'
 
-    team = Team(course_id, leader_sid, team_info, max_team, available_team, team_members_id)
+    team = Team(course_id, leader_id, team_info, max_team, available_team, team_members_id)
     if Team.query.filter((team.course_id == Team.course_id) &
-                         (team.leader_sid == Team.leader_sid)).first() is None:
+                         (team.leader_id == Team.leader_id)).first() is None:
         db.session.add(team)
         db.session.commit()
         return "success", 200
@@ -114,15 +114,20 @@ def delete_team():
 @app.route('/modify_team', methods=['POST'])
 def modify_team():
     team_id = request.values.get('team_id')
+    leader_id = request.values.get('leader_id')
     team_members_id = request.values.get('team_members_id')
     team = Team.query.filter(team_id == Team.team_id).first()
     if team is None:
         return "Cannot find such a team", 400
     else:
-        team.team_members_id = team_members_id
-        db.session.add(team)
-        db.session.commit()
-        return "success", 200
+        # if need to change team leader
+        if leader_id == 'None':
+            team.leader_id = leader_id
+        else:
+            team.team_members_id = team_members_id
+            db.session.add(team)
+            db.session.commit()
+            return "success", 200
 
 
 # Course部分
@@ -231,13 +236,15 @@ def course_modify_student():
         db.session.commit()
         return 'success', 200
 
+
 # third session key
 @app.route('/get_third_session_key', methods=['POST', 'GET'])
 def get_third_session_key():
     code = request.values.get('code')
     encryptedData = request.values.get('encryptedData')
     iv = request.values.get('iv')
-    # encryptedData = 'CiyLU1Aw2KjvrjMdj8YKliAjtP4gsMZMQmRzooG2xrDcvSnxIMXFufNstNGTyaGS9uT5geRa0W4oTOb1WT7fJlAC+oNPdbB+3hVbJSRgv+4lGOETKUQz6OYStslQ142dNCuabNPGBzlooOmB231qMM85d2/fV6ChevvXvQP8Hkue1poOFtnEtpyxVLW1zAo6/1Xx1COxFvrc2d7UL/lmHInNlxuacJXwu0fjpXfz/YqYzBIBzD6WUfTIF9GRHpOn/Hz7saL8xz+W//FRAUid1OksQaQx4CMs8LOddcQhULW4ucetDf96JcR3g0gfRK4PC7E/r7Z6xNrXd2UIeorGj5Ef7b1pJAYB6Y5anaHqZ9J6nKEBvB4DnNLIVWSgARns/8wR2SiRS7MNACwTyrGvt9ts8p12PKFdlqYTopNHR1Vf7XjfhQlVsAJdNiKdYmYVoKlaRv85IfVunYzO0IKXsyl7JCUjCpoG20f0a04COwfneQAGGwd5oa+T8yO5hzuyDb/XcxxmK01EpqOyuxINew=='
+    # encryptedData = 'CiyLU1Aw2KjvrjMdj8YKliAjtP4gsMZMQmRzooG2xrDcvSnxIMXFufNstNGTyaGS9uT5geRa0W4oTOb1WT7fJlAC+oNPdbB+3
+    # hVbJSRgv+4lGOETKUQz6OYStslQ142dNCuabNPGBzlooOmB231qMM85d2/fV6ChevvXvQP8Hkue1poOFtnEtpyxVLW1zAo6/1Xx1COxFvrc2d7UL/lmHInNlxuacJXwu0fjpXfz/YqYzBIBzD6WUfTIF9GRHpOn/Hz7saL8xz+W//FRAUid1OksQaQx4CMs8LOddcQhULW4ucetDf96JcR3g0gfRK4PC7E/r7Z6xNrXd2UIeorGj5Ef7b1pJAYB6Y5anaHqZ9J6nKEBvB4DnNLIVWSgARns/8wR2SiRS7MNACwTyrGvt9ts8p12PKFdlqYTopNHR1Vf7XjfhQlVsAJdNiKdYmYVoKlaRv85IfVunYzO0IKXsyl7JCUjCpoG20f0a04COwfneQAGGwd5oa+T8yO5hzuyDb/XcxxmK01EpqOyuxINew=='
     # iv = 'r7BXXKkLb8qrSNn05n0qiA=='
     decryptedData = ThirdSessionKey().get_decrypted_data(js_code=code, encrypted_data=encryptedData, iv=iv)
     if decryptedData:
