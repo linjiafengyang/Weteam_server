@@ -256,6 +256,7 @@ def get_decrypted_data():
     iv = request.values.get('iv')
     print(third_session_key)
     decrypted = ThirdSessionKey().decrypt_data(third_session_key=third_session_key, encryptedData=encryptedData, iv=iv)
+    print(decrypted)
     if decrypted:
         return json.dumps(decrypted), 200
     else:
