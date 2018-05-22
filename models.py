@@ -163,9 +163,9 @@ class ThirdSessionKey(db.Model):
     """third session key"""
     __tablename__ = 'thirdsessionkeys'
     third_session_key_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    third_session_key = db.Column(db.String(50), unique=True, nullable=False)
-    session_key = db.Column(db.String(50), unique=True, nullable=False)
-    openid = db.Column(db.String(50), unique=True, nullable=False)
+    third_session_key = db.Column(db.String(50), nullable=False)
+    session_key = db.Column(db.String(50), nullable=False)
+    openid = db.Column(db.String(50), nullable=False)
 
     def __init__(self, third_session_key=None, session_key=None, openid=None):
         self.appid = 'wx3b06cde5635b391d'
