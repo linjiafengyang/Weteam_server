@@ -181,15 +181,15 @@ class ThirdSessionKey(db.Model):
         session_key_and_openid = self.jscode2session(js_code)
         self.session_key = session_key_and_openid.get('session_key')
         self.openid = session_key_and_openid.get('openid')
-        print(self.session_key)
-        print(self.openid)
+        # print(self.session_key)
+        # print(self.openid)
         
         if self.session_key is None:
-            return 'Error: session_key is None'
+            return 'Error: session_key is None', 400
         elif encrypted_data is None:
-            return 'Error: encrypted_data is None'
+            return 'Error: encrypted_data is None', 400
         elif iv is None:
-            return 'Error: iv is None'
+            return 'Error: iv is None', 400
         
         # base64 decode
         session_key = base64.b64decode(self.session_key)
@@ -211,13 +211,13 @@ class ThirdSessionKey(db.Model):
 
         # store third_session_key, session_key, openid
         thirdsessionkey = ThirdSessionKey(self.third_session_key, self.session_key, self.openid)
-        temp = ThirdSessionKey.query.filter((thirdsessionkey.session_key == ThirdSessionKey.session_key) & 
-                                        (thirdsessionkey.openid == ThirdSessionKey.openid)).first()
+        temp = ThirdSessionKey.query.filter(thirdsessionkey.openid == ThirdSessionKey.openid).first()
         if temp is None:
             db.session.add(thirdsessionkey)
             db.session.commit()
         else:
             temp.third_session_key = thirdsessionkey.third_session_key
+            temp.session_key = thirdsessionkey.session_key
             db.session.commit()
 
         return decrypted
