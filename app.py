@@ -241,11 +241,22 @@ def course_modify_student():
 @app.route('/get_third_session_key', methods=['POST', 'GET'])
 def get_third_session_key():
     code = request.values.get('code')
+    # encryptedData = request.values.get('encryptedData')
+    # iv = request.values.get('iv')
+    third_session_key = ThirdSessionKey().get_third_session_key(js_code=code)
+    if third_session_key:
+        return json.dumps(third_session_key), 200
+    else:
+        return 'some error', 400
+
+@app.route('/get_decrypted_data', methods=['POST', 'GET'])
+def get_decrypted_data():
+    third_session_key = request.values.get('third_session_key')
     encryptedData = request.values.get('encryptedData')
     iv = request.values.get('iv')
-    decryptedData = ThirdSessionKey().get_third_session_key(js_code=code, encrypted_data=encryptedData, iv=iv)
-    if decryptedData:
-        return json.dumps(decryptedData), 200
+    decrypted = ThirdSessionKey().decrypt_data(third_session_key=third_session_key, encryptedData=encryptedData, iv=iv)
+    if decrypted:
+        return json.dumps(decrypted), 200
     else:
         return 'some error', 400
 

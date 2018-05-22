@@ -177,37 +177,16 @@ class ThirdSessionKey(db.Model):
         self.openid = openid
 
     # decrypt encrypted_data and add third_session_key to it
-    def get_third_session_key(self, js_code, encrypted_data, iv):
+    def get_third_session_key(self, js_code):
         session_key_and_openid = self.jscode2session(js_code)
         self.session_key = session_key_and_openid.get('session_key')
         self.openid = session_key_and_openid.get('openid')
-        # print(self.session_key)
-        # print(self.openid)
         
         if self.session_key is None:
             return 'Error: session_key is None', 400
-        elif encrypted_data is None:
-            return 'Error: encrypted_data is None', 400
-        elif iv is None:
-            return 'Error: iv is None', 400
-        
-        # base64 decode
-        session_key = base64.b64decode(self.session_key)
-        encrypted_data = base64.b64decode(encrypted_data)
-        iv = base64.b64decode(iv)
-
-        cipher = AES.new(session_key, AES.MODE_CBC, iv)
-
-        decrypt_data = self._unpad(cipher.decrypt(encrypted_data))
-        decrypted = json.loads(decrypt_data.decode('utf-8', 'ignore'))
-
-        if decrypted['watermark']['appid'] != self.appid:
-            raise Exception('Invalid Buffer')
 
         # 生成长度为32位的hex字符串，用于第三方session的key
         self.third_session_key = binascii.hexlify(os.urandom(16)).decode()
-        # add to the decrypted(it is a python dictionary)
-        decrypted['third_session_key'] = self.third_session_key
 
         # store third_session_key, session_key, openid
         thirdsessionkey = ThirdSessionKey(self.third_session_key, self.session_key, self.openid)
@@ -220,7 +199,7 @@ class ThirdSessionKey(db.Model):
             temp.session_key = thirdsessionkey.session_key
             db.session.commit()
 
-        return decrypted
+        return self.third_session_key
         
     def login(self, third_session_key):
         temp = ThirdSessionKey.query.filter(third_session_key == ThirdSessionKey.third_session_key).first()
@@ -228,12 +207,27 @@ class ThirdSessionKey(db.Model):
             return False
         else:
             return True
-            # session_key = temp.session_key
-            # if session_key is None:
-            #     return False
-            # else:
-            #     return True
 
+    def decrypt_data(self, third_session_key, encryptedData, iv):
+        temp = ThirdSessionKey.query.filter(third_session_key == ThirdSessionKey.third_session_key).first()
+        if temp is None:
+            return False
+        else:
+            self.session_key = temp.session_key
+        # base64 decode
+        session_key = base64.b64decode(self.session_key)
+        encrypted_data = base64.b64decode(encryptedData)
+        iv = base64.b64decode(iv)
+
+        cipher = AES.new(session_key, AES.MODE_CBC, iv)
+
+        decrypted_data = self._unpad(cipher.decrypt(encrypted_data))
+        decrypted = json.loads(decrypted_data.decode('utf-8', 'ignore'))
+
+        if decrypted['watermark']['appid'] != self.appid:
+            raise Exception('Invalid Buffer')
+        
+        return decrypted
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
@@ -243,4 +237,5 @@ class ThirdSessionKey(db.Model):
         url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
                ).format(self.appid, self.secret, js_code)
         r = requests.get(url)
+        print(r.json())
         return r.json()
