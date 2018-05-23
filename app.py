@@ -56,7 +56,7 @@ def modify_attended_course():
         u.attended_course_ids = attended_course_ids
         db.session.add(u)
         db.session.commit()
-        return "success", 200
+        return "%s" % json.dumps(u.__json__()), 200
 
 # Team部分
 
@@ -79,7 +79,7 @@ def add_team():
                          (team.leader_id == Team.leader_id)).first() is None:
         db.session.add(team)
         db.session.commit()
-        return "success", 200
+        return "%s" % json.dumps(team.__json__()), 200
     else:
         return "Already have a team with this leader", 400
 
@@ -127,7 +127,7 @@ def modify_team():
             team.team_members_id = team_members_id
             db.session.add(team)
             db.session.commit()
-            return "success", 200
+            return "%s" % json.dumps(team.__json__()), 200
 
 
 # Course部分
@@ -151,7 +151,7 @@ def add_course():
                            (course_time == Course.course_time)).first() is None:
         db.session.add(course)
         db.session.commit()
-        return 'success', 200
+        return '%s' % json.dumps(course.__json__()), 200
     else:
         return 'Already have this class', 400
 
@@ -234,7 +234,7 @@ def course_modify_student():
         course.student_ids = student_ids
         db.session.add(course)
         db.session.commit()
-        return 'success', 200
+        return '%s' % json.dumps(course.__json__()), 200
 
 
 # third session key
@@ -249,6 +249,7 @@ def get_third_session_key():
     else:
         return 'some error', 400
 
+
 @app.route('/get_decrypted_data', methods=['POST', 'GET'])
 def get_decrypted_data():
     third_session_key = request.values.get('third_session_key')
@@ -260,10 +261,12 @@ def get_decrypted_data():
     else:
         return 'some error', 400
 
+
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     third_session_key = request.values.get('third_session_key')
     return json.dumps(ThirdSessionKey(third_session_key=third_session_key).login(third_session_key=third_session_key)), 200
+
 
 if __name__ == '__main__':
     db.app = app
