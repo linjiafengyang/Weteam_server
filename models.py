@@ -33,7 +33,7 @@ class User(db.Model):
         if User.query.filter(self.student_id == User.student_id).first() is None:
             db.session.add(self)
             db.session.commit()
-            return 'Success', 200
+            return '%s' % json.dumps(self.__json__()), 200
         else:
             return 'Already have this student_id', 400
 
@@ -230,7 +230,7 @@ class ThirdSessionKey(db.Model):
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
-    
+
     # get json(dict): {openid, session_key}
     def jscode2session(self, js_code):
         url = ('https://api.weixin.qq.com/sns/jscode2session?appid={}&secret={}&js_code={}&grant_type=authorization_code'
