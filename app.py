@@ -237,6 +237,21 @@ def course_modify_student():
         return '%s' % json.dumps(course.__json__()), 200
 
 
+@app.route('/modify_team_ids', methods=['POST'])
+def modify_team_ids():
+    """更改课程中的队伍列表"""
+    course_id = request.values.get('course_id')
+    team_ids = request.values.get('team_ids')
+    course = Course.query.filter(course_id == Course.course_id).first()
+    if course is None:
+        return 'Cannot find such a course', 400
+    else:
+        course.team_ids = team_ids
+        db.session.add(course)
+        db.session.commit()
+        return '%s' % json.dumps(course.__json__()), 200
+
+
 # third session key
 @app.route('/get_third_session_key', methods=['POST', 'GET'])
 def get_third_session_key():
