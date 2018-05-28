@@ -175,11 +175,14 @@ def get_course():
     course_id = request.values.get('course_id')
     if course_id is None:
         name = request.values.get('name')
-        course_time = request.values.get('course_time')
-        if name is None or course_time is None:
+        if name is None :
             return 'Don\'t  have enough information', 400
         else:
-            course = Course.query.filter((name == Course.name) & (course_time == Course.course_time)).first()
+            course = Course.query.filter((name == Course.name)).all()
+            if course is not None:
+                for i in range(len(course)):
+                    course[i] = course[i].__json__()
+                return '%s' % json.dumps(course), 200
     else:
         course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
