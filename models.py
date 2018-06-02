@@ -59,7 +59,7 @@ class Team(db.Model):
     team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_id = db.Column(db.Integer)
     # 学号
-    leader_id = db.Column(db.Integer, unique=True, nullable=False)
+    leader_id = db.Column(db.Integer, nullable=False)
     team_info = db.Column(db.String(100), nullable=False)
     # list
     team_members_id = db.Column(db.Text, nullable=False)
