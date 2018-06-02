@@ -126,7 +126,7 @@ class Course(db.Model):
     max_team = db.Column(db.Integer, nullable=False)
     min_team = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, teacher_id,course_info, name, course_time, start_time,
+    def __init__(self, teacher_id, course_info, name, course_time, start_time,
                  end_time, max_team, min_team, student_ids, team_ids):
         self.teacher_id = teacher_id
         self.course_info = course_info
@@ -150,7 +150,8 @@ class Course(db.Model):
             "start_time": self.start_time,
             "end_time": self.end_time,
             "max_team": self.max_team,
-            "min_team": self.min_team
+            "min_team": self.min_team,
+            "student_ids" : self.student_ids
         }
         return info
 

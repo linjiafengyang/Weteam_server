@@ -176,12 +176,16 @@ def get_course():
     if course_id is None:
         name = request.values.get('name')
         if name is None :
-            return 'Don\'t  have enough information', 400
+            return 'Don\'t have enough information', 400
         else:
             course = Course.query.filter((name == Course.name)).all()
             if course is not None:
                 for i in range(len(course)):
+                    teacher = User.query.filter(User.user_id == course.teacher_id).first()
+                    if teacher is None:
+                        return 'Don\'t have teacher : ' + str(course.teacher_id);
                     course[i] = course[i].__json__()
+                    course[i]['teacher_name'] = teacher.username;
                 return '%s' % json.dumps(course), 200
     else:
         course = Course.query.filter(course_id == Course.course_id).first()
