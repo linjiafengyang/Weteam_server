@@ -121,13 +121,12 @@ def modify_team():
         return "Cannot find such a team", 400
     else:
         # if need to change team leader
-        if leader_id == 'None':
+        if leader_id != 'None':
             team.leader_id = leader_id
-        else:
-            team.team_members_id = team_members_id
-            db.session.add(team)
-            db.session.commit()
-            return "%s" % json.dumps(team.__json__()), 200
+        team.team_members_id = team_members_id
+        db.session.add(team)
+        db.session.commit()
+        return "%s" % json.dumps(team.__json__()), 200
 
 
 # Course部分
