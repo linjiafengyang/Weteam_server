@@ -39,7 +39,7 @@ class User(db.Model):
 
     def get_course_ids(self):
         """以list的形式返回team_members_id"""
-        return str(self.attended_course_ids).split('@')
+        return self.attended_course_ids.split('@')
 
     def __json__(self):
         info = {

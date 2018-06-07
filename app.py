@@ -213,14 +213,18 @@ def delete_course():
 
         # 对于所有参加了这门课的学生，在其attended_course_ids中修改
         if course.student_ids != 'None':
-            student_ids_dict = json.load(course.student_ids)
+            student_ids_dict = eval(course.student_ids)
             for user_id in student_ids_dict:
-                user = User.query.filter(user_id == User.user_id).first()
+                user = User.query.filter(user_id == User.student_id).first()
                 if user is None:
                     return 'Cannot find user : %d' % user_id, 400
-                attended_course_ids = user.get_course_ids()
-                attended_course_ids = attended_course_ids.remove(course_id)
-                user.attended_course_ids = ''.join(attended_course_ids)
+                a = user.attended_course_ids
+                a = a.split('@')
+                a = a.remove(course_id)
+                if a is None:
+                    user.attended_course_ids = 'None'
+                else:
+                    user.attended_course_ids = '@'.join(a)
                 db.session.add(user)
 
         db.session.delete(course)
