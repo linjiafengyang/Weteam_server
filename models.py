@@ -93,17 +93,19 @@ class Team(db.Model):
 
     def delete_team(self, course):
         # 得到student_ids
-        student_ids_dict = json.load(course.student_ids)
+        student_ids_dict = eval(course.student_ids)
         team_member = self.get_members_id()
         # 将组内每个成员的组队信息更改
         for member in team_member:
             student_ids_dict[member] = 0
-        # 将队长的组队信息也进行更改
-        student_ids_dict[str(self.leader_id)] = 0
         # 将course的team_ids进行更改
-        team_ids = course.get_team_ids()
-        team_ids = team_ids.remove(str(self.team_id))
-        course.team_ids = '@'.join(team_ids)
+        new_team_ids = course.get_team_ids()
+        new_team_ids = new_team_ids.remove(str(self.team_id))
+        if new_team_ids is None:
+            new_team_ids = 'None'
+        else:
+            new_team_ids = '@'.join(new_team_ids)
+        course.team_ids = new_team_ids
         course.student_ids = json.dumps(student_ids_dict)
         # 更新数据库
         db.session.delete(self)
