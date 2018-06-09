@@ -124,6 +124,10 @@ def modify_team():
         if leader_id != 'None':
             team.leader_id = leader_id
         team.team_members_id = team_members_id
+        temp = team.get_members_id()
+        if temp is None:
+            return "At least 1 member is required", 400
+        team.available_team = team.max_team - len(temp)
         db.session.add(team)
         db.session.commit()
         return "%s" % json.dumps(team.__json__()), 200
