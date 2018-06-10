@@ -100,7 +100,7 @@ class Team(db.Model):
             student_ids_dict[member] = 0
         # 将course的team_ids进行更改
         new_team_ids = course.get_team_ids()
-        new_team_ids = new_team_ids.remove(str(self.team_id))
+        new_team_ids.remove(str(self.team_id))
         if new_team_ids is None:
             new_team_ids = 'None'
         else:

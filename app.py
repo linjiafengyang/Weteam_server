@@ -224,7 +224,7 @@ def delete_course():
                     return 'Cannot find user : %d' % user_id, 400
                 a = user.attended_course_ids
                 a = a.split('@')
-                a = a.remove(course_id)
+                a.remove(course_id)
                 if a is None:
                     user.attended_course_ids = 'None'
                 else:
