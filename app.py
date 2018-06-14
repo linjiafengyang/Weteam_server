@@ -121,13 +121,16 @@ def modify_team():
         return "Cannot find such a team", 400
     else:
         # if need to change team leader
-        if leader_id == 'None':
+        if leader_id != 'None':
             team.leader_id = leader_id
-        else:
-            team.team_members_id = team_members_id
-            db.session.add(team)
-            db.session.commit()
-            return "%s" % json.dumps(team.__json__()), 200
+        team.team_members_id = team_members_id
+        temp = team.get_members_id()
+        if temp is None:
+            return "At least 1 member is required", 400
+        team.available_team = team.max_team - len(temp)
+        db.session.add(team)
+        db.session.commit()
+        return "%s" % json.dumps(team.__json__()), 200
 
 
 # Course部分
@@ -175,11 +178,18 @@ def get_course():
     course_id = request.values.get('course_id')
     if course_id is None:
         name = request.values.get('name')
-        course_time = request.values.get('course_time')
-        if name is None or course_time is None:
-            return 'Don\'t  have enough information', 400
+        if name is None :
+            return 'Don\'t have enough information', 400
         else:
-            course = Course.query.filter((name == Course.name) & (course_time == Course.course_time)).first()
+            course = Course.query.filter((name == Course.name)).all()
+            if course is not None:
+                for i in range(len(course)):
+                    teacher = User.query.filter(User.student_id == course[i].teacher_id).first()
+                    if teacher is None:
+                        return 'Don\'t have teacher : ' + str(course.teacher_id)
+                    course[i] = course[i].__json__()
+                    course[i]['teacher_name'] = teacher.username
+                return '%s' % json.dumps(course), 200
     else:
         course = Course.query.filter(course_id == Course.course_id).first()
     if course is None:
@@ -207,14 +217,18 @@ def delete_course():
 
         # 对于所有参加了这门课的学生，在其attended_course_ids中修改
         if course.student_ids != 'None':
-            student_ids_dict = json.load(course.student_ids)
+            student_ids_dict = eval(course.student_ids)
             for user_id in student_ids_dict:
-                user = User.query.filter(user_id == User.user_id).first()
+                user = User.query.filter(user_id == User.student_id).first()
                 if user is None:
                     return 'Cannot find user : %d' % user_id, 400
-                attended_course_ids = user.get_course_ids()
-                attended_course_ids = attended_course_ids.remove(course_id)
-                user.attended_course_ids = ''.join(attended_course_ids)
+                a = user.attended_course_ids
+                a = a.split('@')
+                a.remove(course_id)
+                if a is None:
+                    user.attended_course_ids = 'None'
+                else:
+                    user.attended_course_ids = '@'.join(a)
                 db.session.add(user)
 
         db.session.delete(course)
@@ -232,6 +246,21 @@ def course_modify_student():
         return 'Cannot find such a course', 400
     else:
         course.student_ids = student_ids
+        db.session.add(course)
+        db.session.commit()
+        return '%s' % json.dumps(course.__json__()), 200
+
+
+@app.route('/modify_team_ids', methods=['POST'])
+def modify_team_ids():
+    """更改课程中的队伍列表"""
+    course_id = request.values.get('course_id')
+    team_ids = request.values.get('team_ids')
+    course = Course.query.filter(course_id == Course.course_id).first()
+    if course is None:
+        return 'Cannot find such a course', 400
+    else:
+        course.team_ids = team_ids
         db.session.add(course)
         db.session.commit()
         return '%s' % json.dumps(course.__json__()), 200
@@ -266,10 +295,6 @@ def login():
     third_session_key = request.values.get('third_session_key')
     return json.dumps(ThirdSessionKey(third_session_key=third_session_key).login(third_session_key=third_session_key)), 200
 
-@app.route('/login', methods=['POST', 'GET'])
-def login():
-    third_session_key = request.values.get('third_session_key')
-    return json.dumps(ThirdSessionKey(third_session_key=third_session_key).login(third_session_key=third_session_key)), 200
 
 if __name__ == '__main__':
     db.app = app

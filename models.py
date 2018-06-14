@@ -39,7 +39,7 @@ class User(db.Model):
 
     def get_course_ids(self):
         """以list的形式返回team_members_id"""
-        return str(self.attended_course_ids).split('@')
+        return self.attended_course_ids.split('@')
 
     def __json__(self):
         info = {
@@ -59,7 +59,7 @@ class Team(db.Model):
     team_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_id = db.Column(db.Integer)
     # 学号
-    leader_id = db.Column(db.Integer, unique=True, nullable=False)
+    leader_id = db.Column(db.Integer, nullable=False)
     team_info = db.Column(db.String(100), nullable=False)
     # list
     team_members_id = db.Column(db.Text, nullable=False)
@@ -93,17 +93,19 @@ class Team(db.Model):
 
     def delete_team(self, course):
         # 得到student_ids
-        student_ids_dict = json.load(course.student_ids)
+        student_ids_dict = eval(course.student_ids)
         team_member = self.get_members_id()
         # 将组内每个成员的组队信息更改
         for member in team_member:
             student_ids_dict[member] = 0
-        # 将队长的组队信息也进行更改
-        student_ids_dict[str(self.leader_id)] = 0
         # 将course的team_ids进行更改
-        team_ids = course.get_team_ids()
-        team_ids = team_ids.remove(str(self.team_id))
-        course.team_ids = '@'.join(team_ids)
+        new_team_ids = course.get_team_ids()
+        new_team_ids.remove(str(self.team_id))
+        if new_team_ids is None:
+            new_team_ids = 'None'
+        else:
+            new_team_ids = '@'.join(new_team_ids)
+        course.team_ids = new_team_ids
         course.student_ids = json.dumps(student_ids_dict)
         # 更新数据库
         db.session.delete(self)
@@ -126,7 +128,7 @@ class Course(db.Model):
     max_team = db.Column(db.Integer, nullable=False)
     min_team = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, teacher_id,course_info, name, course_time, start_time,
+    def __init__(self, teacher_id, course_info, name, course_time, start_time,
                  end_time, max_team, min_team, student_ids, team_ids):
         self.teacher_id = teacher_id
         self.course_info = course_info
@@ -150,7 +152,8 @@ class Course(db.Model):
             "start_time": self.start_time,
             "end_time": self.end_time,
             "max_team": self.max_team,
-            "min_team": self.min_team
+            "min_team": self.min_team,
+            "student_ids" : self.student_ids
         }
         return info
 
