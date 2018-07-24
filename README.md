@@ -1,0 +1,2 @@
+# Weteam小程序服务端代码
+使用flask框架和sqlalchemy数据库搭建
